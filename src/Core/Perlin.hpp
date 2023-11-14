@@ -64,13 +64,15 @@ public :
 	float noise1D(float x)
 	{
 		int roundX = std::floor(x);
-		int leftSide = roundX - (roundX % m_frequency);
-		int rightSide = leftSide + m_frequency;
+		int leftSide = roundX - (roundX % frequency);
+		int rightSide = leftSide + frequency;
 		float t = Math::unlerp(leftSide, rightSide, x);
-		return Math::lerp(m_random1D[leftSide/ m_frequency], m_random1D[rightSide/ m_frequency], (1-cos(t * M_PI))/2);
+		return Math::lerp(m_random1D[leftSide/ frequency], m_random1D[rightSide/ frequency], (1-cos(t * M_PI))/2);
 	}
+
+	int frequency = 75;
+	float amplitude = 10;
 
 private :
 	std::array<float, 4096> m_random1D;
-	int m_frequency = 75;
 };

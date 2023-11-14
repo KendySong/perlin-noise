@@ -28,12 +28,10 @@ int Application::run()
     m_image.create(Settings::instance.width, Settings::instance.height, sf::Color::Black);
     m_texture.loadFromImage(m_image);
     m_sprite = sf::Sprite(m_texture, sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(Settings::instance.width, Settings::instance.height)));
+    auto imageSize = m_image.getSize();
 
     Perlin perlin;
-    for (size_t x = 0; x < Settings::instance.width; x++)
-    {
-        m_image.setPixel(x, Settings::instance.height / 2 + perlin.noise1D(x)*10, sf::Color::White);
-    }
+    
     
     while (p_window->isOpen())
     {
@@ -46,6 +44,11 @@ int Application::run()
             }           
         }   
 
+        for (size_t x = 0; x < Settings::instance.width; x++)
+        {
+            m_image.setPixel(x, Settings::instance.height / 2 + perlin.noise1D(x) * perlin.amplitude, sf::Color::White);
+        }
+
         ImGui::SFML::Update(*p_window, m_deltaClock.restart());
         m_texture.loadFromImage(m_image);
         m_sprite.setTexture(m_texture);
@@ -54,10 +57,14 @@ int Application::run()
         p_window->draw(m_sprite);
 
         ImGui::Begin("Settings");
+        ImGui::DragFloat("Amplitude", &perlin.amplitude, 0.25f, -10, 10);
         ImGui::End();
 
         ImGui::SFML::Render(*p_window);
         p_window->display();
+
+
+        memset((void*)m_image.getPixelsPtr(), imageSize.x * imageSize.y * 4, 0);
     }
 
     return 0;
