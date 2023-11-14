@@ -32,7 +32,7 @@ int Application::run()
     Perlin perlin;
     for (size_t x = 0; x < Settings::instance.width; x++)
     {
-        m_image.setPixel(x, Settings::instance.height / 2 + perlin.noise1D(x), sf::Color::White);
+        m_image.setPixel(x, Settings::instance.height / 2 + perlin.noise1D(x)*10, sf::Color::White);
     }
     
     while (p_window->isOpen())

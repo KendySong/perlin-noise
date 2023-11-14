@@ -2,7 +2,10 @@
 #include <random>
 #include <cstdint>
 #include <array>
-#include <cmath>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 
 class Vec2
 {
@@ -63,10 +66,11 @@ public :
 		int roundX = std::floor(x);
 		int leftSide = roundX - (roundX % m_frequency);
 		int rightSide = leftSide + m_frequency;
-		return Math::lerp(m_random1D[leftSide/ m_frequency], m_random1D[rightSide/ m_frequency], Math::unlerp(leftSide, rightSide, x));
+		float t = Math::unlerp(leftSide, rightSide, x);
+		return Math::lerp(m_random1D[leftSide/ m_frequency], m_random1D[rightSide/ m_frequency], (1-cos(t * M_PI))/2);
 	}
 
 private :
 	std::array<float, 4096> m_random1D;
-	int m_frequency = 5;
+	int m_frequency = 75;
 };
