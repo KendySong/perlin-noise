@@ -73,7 +73,7 @@ public :
 
 		int roundX = std::floor(x);
 		int leftSide = roundX - (roundX % frequencyPixel);
-		int rightSide = leftSide + frequencyPixel;
+		int rightSide = leftSide + frequencyPixel < (m_random1D.size() * frequencyPixel) ? leftSide + frequencyPixel : 0;
 		float t = Math::findScale(leftSide, rightSide, x);
 
 		return Math::smoothLerp(m_random1D[leftSide/ frequencyPixel], m_random1D[rightSide/ frequencyPixel], t) * this->amplitude;

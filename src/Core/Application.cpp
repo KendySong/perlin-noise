@@ -28,11 +28,9 @@ int Application::run()
     m_image.create(Settings::instance.width, Settings::instance.height, sf::Color::Black);
     m_texture.loadFromImage(m_image);
     m_sprite = sf::Sprite(m_texture, sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(Settings::instance.width, Settings::instance.height)));
-    auto imageSize = m_image.getSize();
 
     Perlin perlin;
-    
-    
+ 
     while (p_window->isOpen())
     {
         while (p_window->pollEvent(m_event))
@@ -53,6 +51,8 @@ int Application::run()
         ImGui::SFML::Update(*p_window, m_deltaTime);
         m_texture.loadFromImage(m_image);
         m_sprite.setTexture(m_texture);
+
+        perlin.offset.x += m_deltaTime.asSeconds() * 10;
 
         p_window->clear();
         p_window->draw(m_sprite);
