@@ -49,7 +49,8 @@ int Application::run()
             m_image.setPixel(x, Settings::instance.height / 2 + perlin.noise1D(x), sf::Color::White);
         }
 
-        ImGui::SFML::Update(*p_window, m_deltaClock.restart());
+        m_deltaTime = m_deltaClock.restart();
+        ImGui::SFML::Update(*p_window, m_deltaTime);
         m_texture.loadFromImage(m_image);
         m_sprite.setTexture(m_texture);
 
@@ -57,8 +58,9 @@ int Application::run()
         p_window->draw(m_sprite);
 
         ImGui::Begin("Settings");
-        ImGui::DragFloat("Amplitude", &perlin.amplitude, 0.25f, -10, 10);
-        ImGui::DragFloat("Frequency", &perlin.frequency, 0.25f, -10, 10);
+            ImGui::DragFloat("Amplitude", &perlin.amplitude, 0.25, -10, 10);
+            ImGui::DragFloat("Frequency", &perlin.frequency, 0.25, -10, 10);
+            ImGui::DragFloat2("Offset", &perlin.offset.x, 0.25, -10, -10);
         ImGui::End();
 
         ImGui::SFML::Render(*p_window);

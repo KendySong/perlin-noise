@@ -33,7 +33,12 @@ public:
 		return (1 - t) * a + b * t;
 	}
 
-	static float unlerp(float a, float b, float x)
+	static float smoothLerp(float a, float b, float t)
+	{
+		return lerp(a, b, (1 - cos(t * M_PI)) * 0.5);
+	}
+
+	static float findScale(float a, float b, float x)
 	{
 		return (x - a) / (b - a);
 	}
@@ -64,16 +69,20 @@ public :
 	float noise1D(float x)
 	{
 		x *= frequency;
+		x += offset.x;
+
 		int roundX = std::floor(x);
 		int leftSide = roundX - (roundX % frequencyPixel);
 		int rightSide = leftSide + frequencyPixel;
-		float t = Math::unlerp(leftSide, rightSide, x);
-		return Math::lerp(m_random1D[leftSide/ frequencyPixel], m_random1D[rightSide/ frequencyPixel], (1-cos(t * M_PI))/2) * this->amplitude;
+		float t = Math::findScale(leftSide, rightSide, x);
+
+		return Math::smoothLerp(m_random1D[leftSide/ frequencyPixel], m_random1D[rightSide/ frequencyPixel], t) * this->amplitude;
 	}
 
 	int frequencyPixel = 75;
 	float amplitude = 10;
 	float frequency = 1;
+	Vec2 offset;
 
 private :
 	std::array<float, 4096> m_random1D;
