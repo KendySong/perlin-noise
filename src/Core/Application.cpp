@@ -46,7 +46,7 @@ int Application::run()
 
         for (size_t x = 0; x < Settings::instance.width; x++)
         {
-            m_image.setPixel(x, Settings::instance.height / 2 + perlin.noise1D(x) * perlin.amplitude, sf::Color::White);
+            m_image.setPixel(x, Settings::instance.height / 2 + perlin.noise1D(x), sf::Color::White);
         }
 
         ImGui::SFML::Update(*p_window, m_deltaClock.restart());
@@ -58,13 +58,13 @@ int Application::run()
 
         ImGui::Begin("Settings");
         ImGui::DragFloat("Amplitude", &perlin.amplitude, 0.25f, -10, 10);
+        ImGui::DragFloat("Frequency", &perlin.frequency, 0.25f, -10, 10);
         ImGui::End();
 
         ImGui::SFML::Render(*p_window);
         p_window->display();
 
-
-        memset((void*)m_image.getPixelsPtr(), imageSize.x * imageSize.y * 4, 0);
+        m_image.create(Settings::instance.width, Settings::instance.height, sf::Color::Black);
     }
 
     return 0;
