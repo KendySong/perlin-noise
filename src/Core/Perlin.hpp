@@ -111,6 +111,17 @@ public :
 		int north = (int)std::floor(p.y) & m_periodMask;
 		int south = north + 1 < random2D.size() ? north + 1 : 0;
 
+		/*
+		p10         p11
+		*-----------*
+		|	 		|
+		|	 		|
+		|			|
+		|			|
+		*-----------*
+		p00			p01
+		*/
+
 		Vec2 p00(west, south);
 		Vec2 p01(east, south);
 		Vec2 p10(west, north);
