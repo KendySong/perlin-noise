@@ -31,6 +31,9 @@ int Application::run()
 
     Perlin perlin;
     float midHeight = Settings::instance.height / 2;
+    bool animate = false;
+    bool render2D = true;
+
     while (p_window->isOpen())
     {
         while (p_window->pollEvent(m_event))
@@ -38,18 +41,57 @@ int Application::run()
             ImGui::SFML::ProcessEvent(*p_window, m_event);
             if (m_event.type == sf::Event::Closed)
             {
+                ImGui::DestroyContext();
                 p_window->close();
             }           
         }   
-
-        for (size_t x = 0; x < Settings::instance.width; x++)
+      
+        if (!render2D)
         {
-            float input = (float)x / (float)Settings::instance.width * (float)perlin.random1D.size();
-            m_image.setPixel(
-                x, 
-                midHeight + perlin.noise1D(input),
-                sf::Color::White
-            );
+            m_image.create(Settings::instance.width, Settings::instance.height, sf::Color::Black);
+            for (float x = 0; x < Settings::instance.width; x++)
+            {
+                float input = x / Settings::instance.width * perlin.random1D.size();
+                m_image.setPixel(
+                    x,
+                    midHeight - perlin.noise1D(input),
+                    sf::Color::White
+                );
+
+                m_image.setPixel(
+                    x,
+                    midHeight,
+                    sf::Color::Red
+                );
+            }
+        }
+        else
+        {
+            /*
+            for (float y = 0; y < Settings::instance.height; y++)
+            {
+                for (float x = 0; x < Settings::instance.width; x++)
+                {
+                    Vec2 input(
+                        x / Settings::instance.width * perlin.random2D.size(),
+                        y / Settings::instance.height * perlin.random2D.size()
+                    );
+
+                    float color = perlin.noise2D(input) * 255;
+
+                    m_image.setPixel(
+                        x,
+                        y,
+                        sf::Color(color, color, color, 255)
+                    );
+                }
+            }
+            */
+        }
+        
+        if (animate)
+        {
+            perlin.offset.x -= m_deltaTime.asSeconds() * 10;
         }
 
         m_deltaTime = m_deltaClock.restart();
@@ -57,21 +99,45 @@ int Application::run()
         m_texture.loadFromImage(m_image);
         m_sprite.setTexture(m_texture);
 
-        perlin.offset.x += m_deltaTime.asSeconds() * 10;
-
         p_window->clear();
         p_window->draw(m_sprite);
 
         ImGui::Begin("Settings");
             ImGui::DragFloat("Amplitude", &perlin.amplitude, 0.25, -100, 100);
-            ImGui::DragFloat("Frequency", &perlin.frequency, 0.25, -100, 100);
+            ImGui::DragFloat("Frequency", &perlin.frequency, 0.001, -100, 100);
+            ImGui::SliderInt("Octaves", &perlin.octaves, 1, 10);
             ImGui::DragFloat2("Offset", &perlin.offset.x, 5, -10, -10);
+            ImGui::Checkbox("Animate", &animate);
+            ImGui::Checkbox("Render 2D", &render2D);
+            if (render2D)
+            {
+                if (ImGui::Button("Render"))
+                {
+                    for (float y = 0; y < Settings::instance.height; y++)
+                    {
+                        for (float x = 0; x < Settings::instance.width; x++)
+                        {
+                            Vec2 input(
+                                x / Settings::instance.width * perlin.random2D.size(),
+                                y / Settings::instance.height * perlin.random2D.size()
+                            );
+
+                            float color = perlin.noise2D(input) * 255;
+
+                            m_image.setPixel(
+                                x,
+                                y,
+                                sf::Color(color, color, color, 255)
+                            );
+                        }
+                    }
+                }
+            }
         ImGui::End();
 
         ImGui::SFML::Render(*p_window);
         p_window->display();
-
-        m_image.create(Settings::instance.width, Settings::instance.height, sf::Color::Black);
+    
     }
 
     return 0;

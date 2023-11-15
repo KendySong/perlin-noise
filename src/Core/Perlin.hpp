@@ -22,6 +22,18 @@ public :
 
 	}
 
+	void operator+=(const Vec2& a)
+	{
+		this->x += a.x;
+		this->y += a.y;
+	}
+
+	void operator*=(float t)
+	{
+		this->x *= t;
+		this->y *= t;
+	}
+
 	float x;
 	float y;
 };
@@ -61,9 +73,18 @@ public :
 	Perlin() 
 	{
 		srand(time(nullptr));
+		m_periodMask = random1D.size() - 1;
 		for (size_t i = 0; i < random1D.size(); i++)
 		{
 			random1D[i] = Math::randomf(-1, 1);
+		}
+
+		for (size_t y = 0; y < random2D.size(); y++)
+		{
+			for (size_t x = 0; x < random2D.size(); x++)
+			{
+				random2D[y][x] = Math::randomf(0, 1);
+			}
 		}
 	}
 
@@ -72,16 +93,45 @@ public :
 		x *= frequency;
 		x += offset.x;
 
-		int minID = (int)std::floor(x) % random1D.size();
+		int minID = (int)std::floor(x) & m_periodMask;
 		int maxID = minID + 1 < random1D.size() ? minID + 1 : 0;
 		float t = x - minID;
 
 		return Math::smoothLerp(random1D[minID], random1D[maxID], t) * amplitude;
 	}
 
+	float noise2D(Vec2 p)
+	{
+		p *= frequency;
+		p += offset;
+
+		int west = (int)std::floor(p.x) & m_periodMask;
+		int east = west + 1 < random2D[0].size() ? west + 1 : 0;
+
+		int north = (int)std::floor(p.y) & m_periodMask;
+		int south = north + 1 < random2D.size() ? north + 1 : 0;
+
+		Vec2 p00(west, south);
+		Vec2 p01(east, south);
+		Vec2 p10(west, north);
+		Vec2 p11(east, north);
+
+		Vec2 delta(p.x - west, p.y - north);
+		float dxNorth = Math::lerp(random2D[p10.y][p10.x], random2D[p11.y][p11.x], delta.x);
+		float dxSouth = Math::lerp(random2D[p00.y][p00.x], random2D[p01.y][p01.x], delta.x);
+
+		return Math::smoothLerp(dxNorth, dxSouth, delta.y);
+	}
+
 	float amplitude = 100;
-	float frequency = 1;
+	float frequency = 0.1;
+	int octaves = 3;
+	
+	std::array<float, 256> random1D;
+	std::array<std::array<float, 256>, 256> random2D;
 	Vec2 offset;
 
-	std::array<float, 20> random1D;
+
+private :
+	int m_periodMask;
 };
