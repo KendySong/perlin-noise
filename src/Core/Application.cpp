@@ -30,7 +30,7 @@ int Application::run()
     m_sprite = sf::Sprite(m_texture, sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(Settings::instance.width, Settings::instance.height)));
 
     Perlin perlin;
- 
+    float midHeight = Settings::instance.height / 2;
     while (p_window->isOpen())
     {
         while (p_window->pollEvent(m_event))
@@ -44,7 +44,12 @@ int Application::run()
 
         for (size_t x = 0; x < Settings::instance.width; x++)
         {
-            m_image.setPixel(x, Settings::instance.height / 2 + perlin.noise1D(x), sf::Color::White);
+            float input = (float)x / (float)Settings::instance.width * (float)perlin.random1D.size();
+            m_image.setPixel(
+                x, 
+                midHeight + perlin.noise1D(input),
+                sf::Color::White
+            );
         }
 
         m_deltaTime = m_deltaClock.restart();
@@ -58,9 +63,9 @@ int Application::run()
         p_window->draw(m_sprite);
 
         ImGui::Begin("Settings");
-            ImGui::DragFloat("Amplitude", &perlin.amplitude, 0.25, -10, 10);
-            ImGui::DragFloat("Frequency", &perlin.frequency, 0.25, -10, 10);
-            ImGui::DragFloat2("Offset", &perlin.offset.x, 0.25, -10, -10);
+            ImGui::DragFloat("Amplitude", &perlin.amplitude, 0.25, -100, 100);
+            ImGui::DragFloat("Frequency", &perlin.frequency, 0.25, -100, 100);
+            ImGui::DragFloat2("Offset", &perlin.offset.x, 5, -10, -10);
         ImGui::End();
 
         ImGui::SFML::Render(*p_window);

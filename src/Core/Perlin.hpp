@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <random>
 #include <cstdint>
 #include <array>
@@ -60,9 +61,9 @@ public :
 	Perlin() 
 	{
 		srand(time(nullptr));
-		for (size_t i = 0; i < m_random1D.size(); i++)
+		for (size_t i = 0; i < random1D.size(); i++)
 		{
-			m_random1D[i] = Math::randomf(-10, 10);
+			random1D[i] = Math::randomf(-1, 1);
 		}
 	}
 
@@ -71,19 +72,16 @@ public :
 		x *= frequency;
 		x += offset.x;
 
-		int roundX = std::floor(x);
-		int leftSide = roundX - (roundX % frequencyPixel);
-		int rightSide = leftSide + frequencyPixel < (m_random1D.size() * frequencyPixel) ? leftSide + frequencyPixel : 0;
-		float t = Math::findScale(leftSide, rightSide, x);
+		int minID = (int)std::floor(x) % random1D.size();
+		int maxID = minID + 1 < random1D.size() ? minID + 1 : 0;
+		float t = x - minID;
 
-		return Math::smoothLerp(m_random1D[leftSide/ frequencyPixel], m_random1D[rightSide/ frequencyPixel], t) * this->amplitude;
+		return Math::smoothLerp(random1D[minID], random1D[maxID], t) * amplitude;
 	}
 
-	int frequencyPixel = 75;
-	float amplitude = 10;
+	float amplitude = 100;
 	float frequency = 1;
 	Vec2 offset;
 
-private :
-	std::array<float, 4096> m_random1D;
+	std::array<float, 20> random1D;
 };
