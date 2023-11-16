@@ -1,12 +1,13 @@
 #pragma once
-#include <iostream>
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include <random>
 #include <cstdint>
 #include <array>
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
+#define RANDOM_SIZE_1D 256 //Must be 2^n
+#define PERMUTATION_SIZE RANDOM_SIZE_1D * 2
 
 class Vec2
 {
@@ -65,6 +66,11 @@ public:
 	{		
 		return min + (float)rand() / (float)(RAND_MAX / (max - min));
 	}
+
+	static int random(int min, int max)
+	{
+		return rand() % max + min;
+	}
 };
 
 class Perlin
@@ -73,19 +79,18 @@ public :
 	Perlin() 
 	{
 		srand(time(nullptr));
-		m_periodMask = random1D.size() - 1;
-		for (size_t i = 0; i < random1D.size(); i++)
+		m_periodMask = random.size() - 1;
+		for (size_t i = 0; i < random.size(); i++)
 		{
-			random1D[i] = Math::randomf(-1, 1);
+			random[i] = Math::randomf(-1, 1);
 		}
 
-		for (size_t y = 0; y < random2D.size(); y++)
+		for (size_t i = 0; i < m_permutation.size(); i++)
 		{
-			for (size_t x = 0; x < random2D.size(); x++)
-			{
-				random2D[y][x] = Math::randomf(0, 1);
-			}
+			m_permutation[i] = i % RANDOM_SIZE_1D;
 		}
+
+		std::random_shuffle(m_permutation.begin(), m_permutation.end());
 	}
 
 	float noise1D(float x)
@@ -94,10 +99,10 @@ public :
 		x += offset.x;
 
 		int minID = (int)std::floor(x) & m_periodMask;
-		int maxID = minID + 1 < random1D.size() ? minID + 1 : 0;
+		int maxID = minID + 1 < random.size() ? minID + 1 : 0;
 		float t = x - minID;
 
-		return Math::smoothLerp(random1D[minID], random1D[maxID], t) * amplitude;
+		return Math::smoothLerp(random[minID], random[maxID], t) * amplitude;
 	}
 
 	float noise2D(Vec2 p)
@@ -106,10 +111,10 @@ public :
 		p += offset;
 
 		int west = (int)std::floor(p.x) & m_periodMask;
-		int east = west + 1 < random2D[0].size() ? west + 1 : 0;
+		int east = west + 1 < random.size() ? west + 1 : 0;
 
 		int north = (int)std::floor(p.y) & m_periodMask;
-		int south = north + 1 < random2D.size() ? north + 1 : 0;
+		int south = north + 1 < random.size() ? north + 1 : 0;
 
 		/*
 		p10         p11
@@ -122,14 +127,14 @@ public :
 		p00			p01
 		*/
 
-		Vec2 p00(west, south);
-		Vec2 p01(east, south);
-		Vec2 p10(west, north);
-		Vec2 p11(east, north);
+		float p00 = random[m_permutation[m_permutation[west] + south]];
+		float p01 = random[m_permutation[m_permutation[east] + south]];
+		float p10 = random[m_permutation[m_permutation[west] + north]];
+		float p11 = random[m_permutation[m_permutation[east] + north]];
 
 		Vec2 delta(p.x - west, p.y - north);
-		float dxNorth = Math::lerp(random2D[p10.y][p10.x], random2D[p11.y][p11.x], delta.x);
-		float dxSouth = Math::lerp(random2D[p00.y][p00.x], random2D[p01.y][p01.x], delta.x);
+		float dxNorth = Math::lerp(p10, p11, delta.x);
+		float dxSouth = Math::lerp(p00, p01, delta.x);
 
 		return Math::smoothLerp(dxNorth, dxSouth, delta.y);
 	}
@@ -137,12 +142,11 @@ public :
 	float amplitude = 100;
 	float frequency = 0.1;
 	int octaves = 3;
-	
-	std::array<float, 256> random1D;
-	std::array<std::array<float, 256>, 256> random2D;
+
+	std::array<float, RANDOM_SIZE_1D> random;
 	Vec2 offset;
-
-
+	
 private :
 	int m_periodMask;
+	std::array<std::uint32_t, PERMUTATION_SIZE> m_permutation;
 };

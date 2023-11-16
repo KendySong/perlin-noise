@@ -51,7 +51,7 @@ int Application::run()
             m_image.create(Settings::instance.width, Settings::instance.height, sf::Color::Black);
             for (float x = 0; x < Settings::instance.width; x++)
             {
-                float input = x / Settings::instance.width * perlin.random1D.size();
+                float input = x / Settings::instance.width * perlin.random.size();
                 m_image.setPixel(
                     x,
                     midHeight - perlin.noise1D(input),
@@ -118,8 +118,8 @@ int Application::run()
                         for (float x = 0; x < Settings::instance.width; x++)
                         {
                             Vec2 input(
-                                x / Settings::instance.width * perlin.random2D.size(),
-                                y / Settings::instance.height * perlin.random2D.size()
+                                x / Settings::instance.width * perlin.random.size(),
+                                y / Settings::instance.height * perlin.random.size()
                             );
 
                             float color = perlin.noise2D(input) * 255;
