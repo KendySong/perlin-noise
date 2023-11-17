@@ -54,7 +54,7 @@ int Application::run()
                 float input = x / Settings::instance.width * perlin.random.size();
                 m_image.setPixel(
                     x,
-                    midHeight - perlin.noise1D(input),
+                    midHeight - perlin.noise1D(input) * 100,
                     sf::Color::White
                 );
 
@@ -64,29 +64,6 @@ int Application::run()
                     sf::Color::Red
                 );
             }
-        }
-        else
-        {
-            /*
-            for (float y = 0; y < Settings::instance.height; y++)
-            {
-                for (float x = 0; x < Settings::instance.width; x++)
-                {
-                    Vec2 input(
-                        x / Settings::instance.width * perlin.random2D.size(),
-                        y / Settings::instance.height * perlin.random2D.size()
-                    );
-
-                    float color = perlin.noise2D(input) * 255;
-
-                    m_image.setPixel(
-                        x,
-                        y,
-                        sf::Color(color, color, color, 255)
-                    );
-                }
-            }
-            */
         }
         
         if (animate)
@@ -103,11 +80,14 @@ int Application::run()
         p_window->draw(m_sprite);
 
         ImGui::Begin("Settings");
+            ImGui::Checkbox("Animate", &animate);
+            ImGui::Checkbox("Render for image (allow noise output greater than 1)", &perlin.renderForImage);
             ImGui::DragFloat("Amplitude", &perlin.amplitude, 0.25, -100, 100);
             ImGui::DragFloat("Frequency", &perlin.frequency, 0.001, -100, 100);
+            ImGui::DragFloat("Lacunarity", &perlin.lacunarity, 0.01, -5, 5);
+            ImGui::DragFloat("Persistance", &perlin.persistance, 0.01, -5, 5);
             ImGui::SliderInt("Octaves", &perlin.octaves, 1, 10);
-            ImGui::DragFloat2("Offset", &perlin.offset.x, 5, -10, -10);
-            ImGui::Checkbox("Animate", &animate);
+            ImGui::DragFloat2("Offset", &perlin.offset.x, 5, -10, -10);     
             ImGui::Checkbox("Render 2D", &render2D);
             if (render2D)
             {
@@ -123,7 +103,6 @@ int Application::run()
                             );
 
                             float color = perlin.noise2D(input) * 255;
-
                             m_image.setPixel(
                                 x,
                                 y,
@@ -137,7 +116,6 @@ int Application::run()
 
         ImGui::SFML::Render(*p_window);
         p_window->display();
-    
     }
 
     return 0;

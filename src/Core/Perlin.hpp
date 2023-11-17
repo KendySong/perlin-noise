@@ -79,13 +79,13 @@ public :
 	Perlin() 
 	{
 		srand(time(nullptr));
-		m_periodMask = random.size() - 1;
-		for (size_t i = 0; i < random.size(); i++)
+		m_periodMask = RANDOM_SIZE_1D - 1;
+		for (size_t i = 0; i < RANDOM_SIZE_1D; i++)
 		{
-			random[i] = Math::randomf(-1, 1);
+			random[i] = Math::randomf(0, 1);
 		}
 
-		for (size_t i = 0; i < m_permutation.size(); i++)
+		for (size_t i = 0; i < PERMUTATION_SIZE; i++)
 		{
 			m_permutation[i] = i % RANDOM_SIZE_1D;
 		}
@@ -95,6 +95,57 @@ public :
 
 	float noise1D(float x)
 	{
+		float baseAmplitude = this->amplitude;
+		float baseFrequency = this->frequency;
+
+		float noiseHeight = 0;
+		for (size_t i = 0; i < octaves; i++)
+		{
+			noiseHeight += baseNoise1D(x);
+			this->amplitude *= persistance;
+			this->frequency *= lacunarity;
+		}
+
+		this->amplitude = baseAmplitude;
+		this->frequency = baseFrequency;
+		return noiseHeight > 1 ? 1 : noiseHeight;
+	}
+
+	float noise2D(Vec2 p)
+	{
+		float baseAmplitude = this->amplitude;
+		float baseFrequency = this->frequency;
+
+		float maxHeight = 0;
+		if (renderForImage)
+		{
+			for (size_t i = 0; i < octaves; i++)
+			{
+				maxHeight += this->amplitude;
+				this->amplitude *= persistance;
+				this->frequency *= lacunarity;
+			}
+		}	
+
+		this->amplitude = baseAmplitude;
+		this->frequency = baseFrequency;
+
+		float noiseHeight = 0;
+		for (size_t i = 0; i < octaves; i++)
+		{
+			noiseHeight += baseNoise2D(p);
+			this->amplitude *= persistance;
+			this->frequency *= lacunarity;
+		}
+
+		this->amplitude = baseAmplitude;
+		this->frequency = baseFrequency;
+		return renderForImage ? noiseHeight / maxHeight : noiseHeight;
+	}
+
+private :
+	float baseNoise1D(float x)
+	{
 		x *= frequency;
 		x += offset.x;
 
@@ -102,10 +153,10 @@ public :
 		int maxID = minID + 1 < random.size() ? minID + 1 : 0;
 		float t = x - minID;
 
-		return Math::smoothLerp(random[minID], random[maxID], t) * amplitude;
+		return (2 * Math::smoothLerp(random[minID], random[maxID], t) - 1) * amplitude;		
 	}
 
-	float noise2D(Vec2 p)
+	float baseNoise2D(Vec2 p)
 	{
 		p *= frequency;
 		p += offset;
@@ -133,18 +184,23 @@ public :
 		float p11 = random[m_permutation[m_permutation[east] + north]];
 
 		Vec2 delta(p.x - west, p.y - north);
-		float dxNorth = Math::lerp(p10, p11, delta.x);
-		float dxSouth = Math::lerp(p00, p01, delta.x);
+		float dxNorth = Math::smoothLerp(p10, p11, delta.x);
+		float dxSouth = Math::smoothLerp(p00, p01, delta.x);
 
-		return Math::smoothLerp(dxNorth, dxSouth, delta.y);
+		return Math::smoothLerp(dxNorth, dxSouth, delta.y) * amplitude;
 	}
 
-	float amplitude = 100;
+public :
+	float amplitude = 1;
 	float frequency = 0.1;
+	float lacunarity = 2;
+	float persistance = 0.5;
 	int octaves = 3;
 
 	std::array<float, RANDOM_SIZE_1D> random;
 	Vec2 offset;
+
+	bool renderForImage = true;
 	
 private :
 	int m_periodMask;
