@@ -31,7 +31,6 @@ int Application::run()
     Perlin perlin;
     float midHeight = Settings::instance.height / 2;
     bool animate = false;
-    bool render2D = true;
 
     while (p_window->isOpen())
     {
@@ -53,7 +52,7 @@ int Application::run()
                 float input = x / Settings::instance.width * perlin.random.size();
                 m_image.setPixel(
                     x,
-                    midHeight - perlin.noise1D(input) * 100,
+                    midHeight + perlin.noise1D(input) * 100,
                     sf::Color::White
                 );
 
@@ -67,7 +66,7 @@ int Application::run()
         
         if (animate)
         {
-            perlin.offset.x -= m_deltaTime.asSeconds() * 10;
+            perlin.offset.x -= m_deltaTime.asSeconds() * 1;
         }
 
         m_deltaTime = m_deltaClock.restart();
@@ -85,9 +84,8 @@ int Application::run()
             ImGui::DragFloat("Frequency", &perlin.frequency, 0.001, -100, 100);
             ImGui::DragFloat("Lacunarity", &perlin.lacunarity, 0.01, -5, 5);
             ImGui::DragFloat("Persistance", &perlin.persistance, 0.01, -5, 5);
-            ImGui::SliderInt("Octaves", &perlin.octaves, 1, 10);
+            ImGui::SliderInt("Octaves", &perlin.octaves, 0.01, 10);
             ImGui::DragFloat2("Offset", &perlin.offset.x, 5, -10, -10);  
-
 
             if (ImGui::BeginCombo("Render Type", NoiseTypeStr(perlin.type)))
             {
@@ -97,6 +95,24 @@ int Application::run()
                     if (ImGui::Selectable(NoiseTypeStr(static_cast<NoiseType>(i)), isSelect))
                     {
                         perlin.type = static_cast<NoiseType>(i);
+                    }
+
+                    if (isSelect)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            if (ImGui::BeginCombo("Lerp type", LerpTypeStr(perlin.lerp)))
+            {
+                for (size_t i = 0; i < static_cast<int>(LerpType::End); i++)
+                {
+                    bool isSelect = i == static_cast<int>(perlin.lerp);
+                    if (ImGui::Selectable(LerpTypeStr(static_cast<LerpType>(i)), isSelect))
+                    {
+                        perlin.lerp = static_cast<LerpType>(i);
                     }
 
                     if (isSelect)
@@ -154,6 +170,24 @@ const char* Application::NoiseTypeStr(NoiseType type)
 
     case NoiseType::Turbulence:
         return "Turbulence";
+        break;
+
+    default:
+        return "Unknwom";
+        break;
+    }
+}
+
+const char* Application::LerpTypeStr(LerpType type)
+{
+    switch (type)
+    {
+    case LerpType::Linear:
+        return "Linear";
+        break;
+
+    case LerpType::Cosine:
+        return "Cosine";
         break;
 
     default:

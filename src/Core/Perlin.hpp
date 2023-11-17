@@ -9,14 +9,6 @@
 #define RANDOM_SIZE_1D 256						//Must be 2^n
 #define PERMUTATION_SIZE RANDOM_SIZE_1D * 2
 
-enum class NoiseType
-{
-	Perlin1D = 0,
-	Fractal = 1,
-	Turbulence = 2,
-	End = 3
-};
-
 class Vec2
 {
 public :
@@ -79,6 +71,21 @@ public:
 	{
 		return rand() % max + min;
 	}
+};
+
+enum class NoiseType
+{
+	Perlin1D = 0,
+	Fractal = 1,
+	Turbulence = 2,
+	End = 3
+};
+
+enum class LerpType
+{
+	Linear = 0,
+	Cosine = 1,
+	End = 2
 };
 
 class Perlin
@@ -161,8 +168,6 @@ public :
 			break;
 		}
 
-		
-
 		this->amplitude = baseAmplitude;
 		this->frequency = baseFrequency;
 		return renderForImage ? noiseHeight / maxHeight : noiseHeight;
@@ -178,7 +183,20 @@ private :
 		int maxID = minID + 1 < random.size() ? minID + 1 : 0;
 		float t = x - minID;
 
-		return (2 * Math::smoothLerp(random[minID], random[maxID], t) - 1) * amplitude;	
+		float height = 0;
+		switch (lerp)
+		{
+		case LerpType::Linear:
+			height = Math::lerp(random[minID], random[maxID], t);
+			break;
+
+		case LerpType::Cosine:
+		default:
+			height = Math::smoothLerp(random[minID], random[maxID], t);
+			break;
+		}
+
+		return (2 * height - 1) * amplitude;	
 	}
 
 	float baseNoise2D(Vec2 p)
@@ -212,15 +230,28 @@ private :
 		float dxNorth = Math::smoothLerp(p10, p11, delta.x);
 		float dxSouth = Math::smoothLerp(p00, p01, delta.x);
 
+		float height = 0;
+		switch (lerp)
+		{
+		case LerpType::Linear:
+			height = Math::lerp(dxNorth, dxSouth, delta.y);
+			break;
+
+		case LerpType::Cosine:
+		default:
+			height = Math::smoothLerp(dxNorth, dxSouth, delta.y);
+			break;
+		}
+
 		switch (type)
 		{
 		case NoiseType::Fractal:
 		default :
-			return Math::smoothLerp(dxNorth, dxSouth, delta.y) * amplitude;
+			return height * amplitude;
 			break;
 
 		case NoiseType::Turbulence:
-			return (2 * Math::smoothLerp(dxNorth, dxSouth, delta.y) - 1) * amplitude;
+			return (2 * height - 1) * amplitude;
 			break;
 		}	
 	}
@@ -237,6 +268,7 @@ public :
 
 	bool renderForImage = true;
 	NoiseType type = NoiseType::Fractal;
+	LerpType lerp = LerpType::Cosine;
 	
 private :
 	int m_periodMask;

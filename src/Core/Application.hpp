@@ -7,6 +7,7 @@ class Application
 private:
 	Application();
 	const char* NoiseTypeStr(NoiseType type);
+	const char* LerpTypeStr(LerpType type);
 
 public:
 	static Application* instance() noexcept;
