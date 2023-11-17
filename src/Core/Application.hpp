@@ -1,10 +1,12 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include "Perlin.hpp"
 
 class Application
 {
 private:
 	Application();
+	const char* NoiseTypeStr(NoiseType type);
 
 public:
 	static Application* instance() noexcept;

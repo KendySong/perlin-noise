@@ -5,7 +5,6 @@
 
 #include "Application.hpp"
 #include "../Settings.hpp"
-#include "Perlin.hpp"
 
 Application* Application::s_app = nullptr;
 Application::Application()
@@ -46,7 +45,7 @@ int Application::run()
             }           
         }   
       
-        if (!render2D)
+        if (perlin.type == NoiseType::Perlin1D)
         {
             m_image.create(Settings::instance.width, Settings::instance.height, sf::Color::Black);
             for (float x = 0; x < Settings::instance.width; x++)
@@ -87,10 +86,28 @@ int Application::run()
             ImGui::DragFloat("Lacunarity", &perlin.lacunarity, 0.01, -5, 5);
             ImGui::DragFloat("Persistance", &perlin.persistance, 0.01, -5, 5);
             ImGui::SliderInt("Octaves", &perlin.octaves, 1, 10);
-            ImGui::DragFloat2("Offset", &perlin.offset.x, 5, -10, -10);     
-            ImGui::Checkbox("Render 2D", &render2D);
+            ImGui::DragFloat2("Offset", &perlin.offset.x, 5, -10, -10);  
 
-            if (render2D)
+
+            if (ImGui::BeginCombo("Render Type", NoiseTypeStr(perlin.type)))
+            {
+                for (size_t i = 0; i < static_cast<int>(NoiseType::End); i++)
+                {
+                    bool isSelect = i == static_cast<int>(perlin.type);
+                    if (ImGui::Selectable(NoiseTypeStr(static_cast<NoiseType>(i)), isSelect))
+                    {
+                        perlin.type = static_cast<NoiseType>(i);
+                    }
+
+                    if (isSelect)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            
+            if (perlin.type != NoiseType::Perlin1D)
             {
                 if (ImGui::Button("Render"))
                 {
@@ -121,4 +138,26 @@ int Application::run()
     }
 
     return 0;
+}
+
+const char* Application::NoiseTypeStr(NoiseType type)
+{
+    switch (type)
+    {
+    case NoiseType::Perlin1D:
+        return "Perlin 1D";
+        break;
+
+    case NoiseType::Fractal:
+        return "Fractal";
+        break;
+
+    case NoiseType::Turbulence:
+        return "Turbulence";
+        break;
+
+    default:
+        return "Unknwom";
+        break;
+    }
 }

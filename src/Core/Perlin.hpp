@@ -11,8 +11,10 @@
 
 enum class NoiseType
 {
-	Fractal,
-	Turbulence
+	Perlin1D = 0,
+	Fractal = 1,
+	Turbulence = 2,
+	End = 3
 };
 
 class Vec2
@@ -105,25 +107,11 @@ public :
 		float baseFrequency = this->frequency;
 
 		float noiseHeight = 0;
-		switch (type)
+		for (size_t i = 0; i < octaves; i++)
 		{
-		case NoiseType::Fractal:
-			for (size_t i = 0; i < octaves; i++)
-			{
-				noiseHeight += baseNoise1D(x);
-				this->amplitude *= persistance;
-				this->frequency *= lacunarity;
-			}
-			break;
-
-		case NoiseType::Turbulence:
-			for (size_t i = 0; i < octaves; i++)
-			{
-				noiseHeight += abs(baseNoise1D(x));
-				this->amplitude *= persistance;
-				this->frequency *= lacunarity;
-			}
-			break;
+			noiseHeight += baseNoise1D(x);
+			this->amplitude *= persistance;
+			this->frequency *= lacunarity;
 		}
 
 		this->amplitude = baseAmplitude;
@@ -248,7 +236,7 @@ public :
 	Vec2 offset;
 
 	bool renderForImage = true;
-	NoiseType type = NoiseType::Turbulence;
+	NoiseType type = NoiseType::Fractal;
 	
 private :
 	int m_periodMask;
