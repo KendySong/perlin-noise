@@ -6,8 +6,14 @@
 #include <cstdint>
 #include <array>
 
-#define RANDOM_SIZE_1D 256 //Must be 2^n
+#define RANDOM_SIZE_1D 256						//Must be 2^n
 #define PERMUTATION_SIZE RANDOM_SIZE_1D * 2
+
+enum class NoiseType
+{
+	Fractal,
+	Turbulence
+};
 
 class Vec2
 {
@@ -99,11 +105,25 @@ public :
 		float baseFrequency = this->frequency;
 
 		float noiseHeight = 0;
-		for (size_t i = 0; i < octaves; i++)
+		switch (type)
 		{
-			noiseHeight += baseNoise1D(x);
-			this->amplitude *= persistance;
-			this->frequency *= lacunarity;
+		case NoiseType::Fractal:
+			for (size_t i = 0; i < octaves; i++)
+			{
+				noiseHeight += baseNoise1D(x);
+				this->amplitude *= persistance;
+				this->frequency *= lacunarity;
+			}
+			break;
+
+		case NoiseType::Turbulence:
+			for (size_t i = 0; i < octaves; i++)
+			{
+				noiseHeight += abs(baseNoise1D(x));
+				this->amplitude *= persistance;
+				this->frequency *= lacunarity;
+			}
+			break;
 		}
 
 		this->amplitude = baseAmplitude;
@@ -125,18 +145,35 @@ public :
 				this->amplitude *= persistance;
 				this->frequency *= lacunarity;
 			}
-		}	
+		}
 
 		this->amplitude = baseAmplitude;
 		this->frequency = baseFrequency;
 
 		float noiseHeight = 0;
-		for (size_t i = 0; i < octaves; i++)
+		switch (type)
 		{
-			noiseHeight += baseNoise2D(p);
-			this->amplitude *= persistance;
-			this->frequency *= lacunarity;
+		case NoiseType::Fractal:
+		default:
+			for (size_t i = 0; i < octaves; i++)
+			{
+				noiseHeight += baseNoise2D(p);
+				this->amplitude *= persistance;
+				this->frequency *= lacunarity;
+			}
+			break;
+
+		case NoiseType::Turbulence:
+			for (size_t i = 0; i < octaves; i++)
+			{
+				noiseHeight += abs(baseNoise2D(p));
+				this->amplitude *= persistance;
+				this->frequency *= lacunarity;
+			}
+			break;
 		}
+
+		
 
 		this->amplitude = baseAmplitude;
 		this->frequency = baseFrequency;
@@ -153,7 +190,7 @@ private :
 		int maxID = minID + 1 < random.size() ? minID + 1 : 0;
 		float t = x - minID;
 
-		return (2 * Math::smoothLerp(random[minID], random[maxID], t) - 1) * amplitude;		
+		return (2 * Math::smoothLerp(random[minID], random[maxID], t) - 1) * amplitude;	
 	}
 
 	float baseNoise2D(Vec2 p)
@@ -187,7 +224,17 @@ private :
 		float dxNorth = Math::smoothLerp(p10, p11, delta.x);
 		float dxSouth = Math::smoothLerp(p00, p01, delta.x);
 
-		return Math::smoothLerp(dxNorth, dxSouth, delta.y) * amplitude;
+		switch (type)
+		{
+		case NoiseType::Fractal:
+		default :
+			return Math::smoothLerp(dxNorth, dxSouth, delta.y) * amplitude;
+			break;
+
+		case NoiseType::Turbulence:
+			return (2 * Math::smoothLerp(dxNorth, dxSouth, delta.y) - 1) * amplitude;
+			break;
+		}	
 	}
 
 public :
@@ -201,6 +248,7 @@ public :
 	Vec2 offset;
 
 	bool renderForImage = true;
+	NoiseType type = NoiseType::Turbulence;
 	
 private :
 	int m_periodMask;

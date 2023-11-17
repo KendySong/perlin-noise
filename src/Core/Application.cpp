@@ -89,6 +89,7 @@ int Application::run()
             ImGui::SliderInt("Octaves", &perlin.octaves, 1, 10);
             ImGui::DragFloat2("Offset", &perlin.offset.x, 5, -10, -10);     
             ImGui::Checkbox("Render 2D", &render2D);
+
             if (render2D)
             {
                 if (ImGui::Button("Render"))
@@ -112,6 +113,7 @@ int Application::run()
                     }
                 }
             }
+
         ImGui::End();
 
         ImGui::SFML::Render(*p_window);
