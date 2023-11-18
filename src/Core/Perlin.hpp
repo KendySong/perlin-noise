@@ -35,9 +35,16 @@ public :
 		this->y *= t;
 	}
 
+	Vec2 operator*(float t)
+	{
+		return { this->x * t, this->y * t };
+	}
+
 	float x;
 	float y;
 };
+
+
 
 class Math
 {

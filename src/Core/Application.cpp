@@ -31,6 +31,7 @@ int Application::run()
     Perlin perlin;
     float midHeight = Settings::instance.height / 2;
     bool animate = false;
+    Vec2 speedDirection(1, 0);
 
     while (p_window->isOpen())
     {
@@ -66,7 +67,7 @@ int Application::run()
         
         if (animate)
         {
-            perlin.offset.x -= m_deltaTime.asSeconds() * 1;
+            perlin.offset += speedDirection * m_deltaTime.asSeconds();
         }
 
         m_deltaTime = m_deltaClock.restart();
@@ -79,6 +80,11 @@ int Application::run()
 
         ImGui::Begin("Settings");
             ImGui::Checkbox("Animate", &animate);
+            if (animate)
+            {
+                ImGui::DragFloat2("Input offset", &speedDirection.x, 0.1);
+            }
+
             ImGui::Checkbox("Render for image (allow noise output greater than 1)", &perlin.renderForImage);
             ImGui::DragFloat("Amplitude", &perlin.amplitude, 0.25, -100, 100);
             ImGui::DragFloat("Frequency", &perlin.frequency, 0.001, -100, 100);
