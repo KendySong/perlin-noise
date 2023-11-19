@@ -51,9 +51,10 @@ int Application::run()
             for (float x = 0; x < Settings::instance.width; x++)
             {
                 float input = x / Settings::instance.width * perlin.random.size();
+                float height = midHeight + perlin.noise1D(input) * 100;
                 m_image.setPixel(
                     x,
-                    midHeight + perlin.noise1D(input) * 100,
+                    (height > Settings::instance.height || height < 0) ? midHeight : height,
                     sf::Color::White
                 );
 
