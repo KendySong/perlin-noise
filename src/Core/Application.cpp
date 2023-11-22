@@ -28,7 +28,7 @@ int Application::run()
     m_texture.loadFromImage(m_image);
     m_sprite = sf::Sprite(m_texture, sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(Settings::instance.width, Settings::instance.height)));
 
-    Perlin perlin;
+    Perlin perlin(time(nullptr));
     float midHeight = Settings::instance.height / 2;
     bool animate = false;
     Vec2 speedDirection(1, 0);

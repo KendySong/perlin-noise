@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <array>
 
-#define RANDOM_SIZE_1D 256						//Must be 2^n
+#define RANDOM_SIZE_1D 512						//Must be 2^n
 #define PERMUTATION_SIZE RANDOM_SIZE_1D * 2
 
 class Vec2
@@ -40,15 +40,34 @@ public :
 		return { this->x * t, this->y * t };
 	}
 
+	Vec2 operator/(float t)
+	{
+		return { this->x / t, this->y / t };
+	}
+
+	Vec2 operator-(Vec2 a)
+	{
+		return { this->x - a.x, this->y - a.y };
+	}
+
 	float x;
 	float y;
 };
 
-
-
 class Math
 {
 public:
+	static float distance(Vec2 a, Vec2 b)
+	{
+		Vec2 dt = a - b;
+		return sqrt(dt.x * dt.x + dt.y * dt.y);
+	}
+
+	static float length(Vec2 a)
+	{
+		return sqrt(a.x * a.x + a.y * a.y);
+	}
+
 	static float lerp(float a, float b, float t)
 	{
 		return (1 - t) * a + b * t;
@@ -67,6 +86,11 @@ public:
 	static float dot(Vec2 a, Vec2 b)
 	{
 		return a.x * b.x + a.y * b.y;
+	} 
+
+	static Vec2 normalize(Vec2 a)
+	{
+		return a / Math::length(a);
 	}
 
 	static float randomf(float min, float max)
@@ -97,14 +121,14 @@ enum class LerpType
 
 class Perlin
 {
-public :
-	Perlin() 
+public:
+	Perlin(float seed)
 	{
-		srand(time(nullptr));
+		srand(seed);
 		m_periodMask = RANDOM_SIZE_1D - 1;
 		for (size_t i = 0; i < RANDOM_SIZE_1D; i++)
 		{
-			random[i] = Math::randomf(0, 1);
+			random[i] = Math::normalize(Vec2(Math::randomf(-1, 1), Math::randomf(-1, 1)));
 		}
 
 		for (size_t i = 0; i < PERMUTATION_SIZE; i++)
@@ -180,7 +204,7 @@ public :
 		return renderForImage ? noiseHeight / maxHeight : noiseHeight;
 	}
 
-private :
+private:
 	float baseNoise1D(float x)
 	{
 		x *= frequency;
@@ -194,16 +218,16 @@ private :
 		switch (lerp)
 		{
 		case LerpType::Linear:
-			height = Math::lerp(random[minID], random[maxID], t);
+			height = Math::lerp(random[minID].x, random[maxID].x, t);
 			break;
 
 		case LerpType::Cosine:
 		default:
-			height = Math::smoothLerp(random[minID], random[maxID], t);
+			height = Math::smoothLerp(random[minID].x, random[maxID].x, t);
 			break;
 		}
 
-		return (2 * height - 1) * amplitude;	
+		return height * amplitude;
 	}
 
 	float baseNoise2D(Vec2 p)
@@ -218,20 +242,25 @@ private :
 		int south = north + 1 < random.size() ? north + 1 : 0;
 
 		/*
-		p10         p11
+		v10         v11
 		*-----------*
 		|	 		|
 		|	 		|
 		|			|
 		|			|
 		*-----------*
-		p00			p01
+		v00			v01
 		*/
 
-		float p00 = random[m_permutation[m_permutation[west] + south]];
-		float p01 = random[m_permutation[m_permutation[east] + south]];
-		float p10 = random[m_permutation[m_permutation[west] + north]];
-		float p11 = random[m_permutation[m_permutation[east] + north]];
+		Vec2 v00 = random[m_permutation[m_permutation[west] + south]];
+		Vec2 v01 = random[m_permutation[m_permutation[east] + south]];
+		Vec2 v10 = random[m_permutation[m_permutation[west] + north]];
+		Vec2 v11 = random[m_permutation[m_permutation[east] + north]];
+
+		float p00 = Math::dot(v00, p - Vec2(west, south));
+		float p01 = Math::dot(v01, p - Vec2(east, south));
+		float p10 = Math::dot(v10, p - Vec2(west, north));
+		float p11 = Math::dot(v11, p - Vec2(east, north));
 
 		Vec2 delta(p.x - west, p.y - north);
 		float dxNorth = Math::smoothLerp(p10, p11, delta.x);
@@ -253,31 +282,31 @@ private :
 		switch (type)
 		{
 		case NoiseType::Fractal:
-		default :
-			return height * amplitude;
+		default:
+			return (height + 1) / 2 * amplitude;
 			break;
 
 		case NoiseType::Turbulence:
-			return (2 * height - 1) * amplitude;
+			return height * amplitude;
 			break;
 		}	
 	}
 
-public :
+public:
 	float amplitude = 1;
-	float frequency = 0.1;
+	float frequency = 0.03;
 	float lacunarity = 2;
 	float persistance = 0.5;
-	int octaves = 3;
+	int octaves = 4;
 
-	std::array<float, RANDOM_SIZE_1D> random;
+	std::array<Vec2, RANDOM_SIZE_1D> random;
 	Vec2 offset;
 
 	bool renderForImage = true;
 	NoiseType type = NoiseType::Fractal;
 	LerpType lerp = LerpType::Cosine;
-	
-private :
+
+private:
 	int m_periodMask;
 	std::array<std::uint32_t, PERMUTATION_SIZE> m_permutation;
 };
